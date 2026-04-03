@@ -53,6 +53,9 @@ RAM, CPU, disk, and Drive storage monitored continuously. WhatsApp alerts at con
 **Database Backups**
 Automatic daily backups to Google Drive. Daily backups kept for 7 days, weekly for 4 weeks, monthly for 6 months. Restore triggered manually.
 
+**Image Generation Service**
+Shared service used by any application that needs AI-generated images. Currently uses Pippit.ai via browser automation (Puppeteer + Chromium). No application calls Pippit.ai directly — all go through this service. Requests queue automatically — one generation at a time. If a better tool is found later, only this service needs to change, nothing else.
+
 ---
 
 ## Application 1 — Social Media Manager

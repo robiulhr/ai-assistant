@@ -587,6 +587,34 @@ All configuration lives in one place, organised into two levels. Every applicati
 
 ---
 
+### 7 — Image Generation Service
+
+Shared service used by any application that needs AI-generated images. All requests go through this one service — no application calls Pippit.ai directly.
+
+**Tool:** Pippit.ai via Puppeteer (browser automation)
+- Pippit.ai has no public API — Puppeteer controls a Chromium browser to interact with it
+- Chromium (snap) already installed on VPS
+- Current model: Seedream 5 Lite (free tier)
+
+**How it works:**
+- Application adds an image generation job to the Job Queue
+- Image Generation Service picks it up, opens Pippit.ai in Chromium via Puppeteer, submits the prompt and settings, waits for the result, downloads the image
+- Image saved to server temporarily, then uploaded to Google Drive via Google Drive Service
+- File index updated, application notified with the file reference
+- All requests queue — only one generation runs at a time (Pippit.ai is one session, one browser)
+
+**Why shared:**
+- All applications that need image generation (Social Media Manager now, AI Content Creator later, others in future) use the same service
+- If Pippit.ai changes their UI and automation breaks — one fix in one place, all applications benefit
+- If a better tool with a real API is found later — swap the implementation in one service, nothing else changes
+
+**Limitations:**
+- One at a time — simultaneous requests queue, do not run in parallel
+- Fragile to UI changes on Pippit.ai — needs maintenance if their interface updates
+- Free tier may have daily generation limits — monitor usage
+
+---
+
 ## Containers
 
 ### 1. OpenClaw (port 18888)

@@ -340,6 +340,29 @@
 
 ---
 
+- [ ] **1.12 — Image Generation Service (Pippit.ai via Puppeteer)**
+
+  Shared image generation service working end to end.
+
+  **What to build:**
+  - Puppeteer script that opens Pippit.ai, logs in, submits a prompt, waits for result, downloads the image
+  - Wrap as a Job Queue job (Type 2 — multi-step pipeline)
+  - Image saved to server temporarily → uploaded to Google Drive → file index updated → caller notified
+  - Web app: basic test UI to trigger a generation and see the result
+
+  **How deep to go:**
+  Get one real image generated and saved to Drive. Prove the full pipeline works. No application-specific logic yet.
+
+  **What NOT to think about:**
+  - Every image type and field (Social Media Manager specific — handled in Phase 2)
+  - Simultaneous request handling — Job Queue already handles queuing
+  - Alternative tools — Pippit.ai only for now
+
+  **You are done when:**
+  Trigger a test generation → image appears on Google Drive → file index has the record.
+
+---
+
 - [ ] **1.11 — System Health Monitoring**
 
   RAM, CPU, disk, and Drive space monitored with WhatsApp alerts at thresholds.
