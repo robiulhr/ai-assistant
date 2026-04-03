@@ -491,6 +491,12 @@
 - [ ] **2.24 — Post History + Performance Tracking**
   All posted content stored with platform performance data. Per product and per category history views in web app.
 
+- [ ] **2.25 — Asset Variants**
+  Each image and video asset supports multiple variants. Variant metadata (label, type, notes, state, usage history, performance) stored in MongoDB. Drive file ID links variant record to actual file. Web app variant manager per asset.
+
+- [ ] **2.26 — Milestone-Based Actions**
+  Performance data synced periodically from platform APIs. Milestone rule engine checks all recent posts after every sync. Three-level rule hierarchy (business / product / post). Two action types: repost with variant, increase posting frequency. Approval flow via WhatsApp and web app. Milestone actions recorded in post history.
+
 ---
 
 ## Phase 3 — Social Media Manager: Feature 2

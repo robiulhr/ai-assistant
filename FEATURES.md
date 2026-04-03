@@ -89,6 +89,9 @@ All assets — images, videos, and template files — are stored on Google Drive
 
 Every asset has a state: New, Used, Recently Used, or Archived. The system tracks which assets have been posted and when.
 
+**Asset Variants**
+Each image and video asset can have multiple variants — same product, different version. For example: a 60-second full demo video and a 15-second hook version of the same product are two variants of the same asset. Each variant has a label, type, and optional notes so you always know which one you are picking. When reposting or recycling, the system can pick a different variant instead of reusing the same file — making reposts feel fresh without needing entirely new content.
+
 ### Client Reviews
 Customer reviews are a dedicated asset type linked to specific products. Reviews can be text quotes, screenshots, or video testimonials. Every review must be explicitly approved before it can be used in posts — nothing goes public accidentally. Approved reviews can be turned into designed review images or posted as screenshots directly.
 
@@ -107,6 +110,13 @@ By default every post requires your explicit approval before going out. Configur
 
 ### Content Recycling
 When a slot's queue runs low, assets can be recycled — the same image or video used again but with a freshly generated caption. Never the exact same post twice. Recycling is off by default and configurable at four levels: business, slot, product, and category.
+
+### Milestone-Based Actions
+When a published post hits a performance milestone — a defined number of likes, views, comments, or shares — the system prepares an action and asks for your approval. Nothing triggers automatically without your confirmation.
+
+Two actions are available: repost the product using a different asset variant (with explicitly defined changes to caption, title, thumbnail, or other details per platform), or increase the posting frequency for that product temporarily.
+
+Rules are configured at three levels — business (default for all products), product (overrides business defaults), and per post (one-time override). Most products follow the business default. Products that need different treatment get their own rules. Rules are set from the web app or WhatsApp in natural language.
 
 ### Special Days
 A full-year calendar of special days — Bangladesh national days, Islamic calendar, international days, and any custom days you add. Visible as a colour-coded timeline in the web app. For each special day you define how far in advance you want a preparation reminder. When the reminder fires, the system starts a planning conversation via WhatsApp — you decide what to post, generate a fresh image, and approve it. Festival profiles store the setup recipe only — a fresh image is always generated, never reused from a previous year.

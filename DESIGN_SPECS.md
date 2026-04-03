@@ -926,8 +926,25 @@ Product — [Name]
   │     └── Tags and keywords
   │
   ├── Media
-  │     ├── Images (product photos, lifestyle shots)
-  │     └── Videos (demo, unboxing, review)
+  │     ├── Images
+  │     │     └── Variants — each variant has:
+  │     │           ├── Label (e.g. "white background", "lifestyle shot", "price focus")
+  │     │           ├── Type (different angle / crop / style / background / colour)
+  │     │           ├── Drive file ID (pointer to actual file)
+  │     │           ├── Notes (e.g. "works better during Ramadan")
+  │     │           ├── Asset state (New / Used / Recently Used / Archived)
+  │     │           ├── Usage count + last used date
+  │     │           └── Performance data from posts using this variant
+  │     │
+  │     └── Videos
+  │           └── Variants — each variant has:
+  │                 ├── Label (e.g. "60 sec full demo", "15 sec hook", "price highlight")
+  │                 ├── Type (different edit / length / format / opening / hook)
+  │                 ├── Drive file ID (pointer to actual file)
+  │                 ├── Notes (e.g. "best for TikTok and Reels")
+  │                 ├── Asset state (New / Used / Recently Used / Archived)
+  │                 ├── Usage count + last used date
+  │                 └── Performance data from posts using this variant
   │
   ├── Captions
   │     ├── Multiple saved captions per context (launch, promo, feature highlight)
@@ -965,8 +982,20 @@ Product — [Name]
   ├── Status
   │     └── Active / Paused / Discontinued
   │
+  ├── Milestone Rules
+  │     └── Product-level rules (override business defaults — see Milestone Actions section)
+  │
   └── Post History
-        └── All posts made about this product across all platforms with performance data
+        └── All posts made about this product — each post record stores:
+              ├── Platform and account posted to
+              ├── Posted date and time
+              ├── Asset used (Drive file ID + variant ID)
+              ├── Caption used
+              ├── Platform-specific details (YouTube title, tags, thumbnail etc)
+              ├── Performance data — full sync history with timestamps (likes, views, comments, shares tracked at every sync point — not just current totals)
+              ├── Milestone rules active at time of posting
+              ├── Milestone actions triggered (which milestone hit, when, what action was taken)
+              └── Post status (Draft / Scheduled / Published / Failed / Archived)
 ```
 
 **Posting frequency from WhatsApp — natural language, no format to remember:**
@@ -1234,6 +1263,158 @@ The 12-hour recycling preparation flow only triggers when recycling is enabled a
 "stop recycling fun posts"
 "pause all recycling this week"
 "is recycling on for the 8pm slot?"
+```
+
+---
+
+#### Milestone-Based Actions
+
+When a published post hits a performance milestone — the system detects it, prepares the defined action, and asks for your approval. Nothing happens automatically without your confirmation.
+
+**How milestones are checked:**
+Performance data (likes, views, comments, shares) is synced periodically from each platform's API. After every sync, the system checks all recent posts against their applicable milestone rules.
+
+---
+
+#### Performance Data Tracking
+
+**What each platform provides:**
+
+| Platform | Available Metrics | Via |
+|---|---|---|
+| Facebook Pages | Likes, comments, shares, reach, impressions | Meta Graph API |
+| Facebook Groups | Post status only (no engagement metrics) | Not available via API |
+| Instagram | Likes, comments, saves, reach, impressions, video plays | Meta Graph API |
+| TikTok | Views, likes, comments, shares, play time | TikTok API |
+| YouTube | Views, likes, comments, watch time, impressions | YouTube Analytics API |
+
+Facebook Groups have no metrics — Meta does not expose group post engagement via API. Group posts are tracked for status (posted / failed) only.
+
+**Sync frequency:**
+
+| Post age | Sync frequency |
+|---|---|
+| Last 7 days | Every 6 hours |
+| 7–30 days old | Once daily |
+| Older than 30 days | Once weekly |
+
+Recent posts sync frequently because engagement moves fast in the first week. Older posts settle and need less frequent updates.
+
+**What gets stored:**
+Every metric is stored with a timestamp on every sync — not just the current count but the full history of how it grew. This lets you see when a post peaked, how fast engagement grew, and whether a repost outperformed the original.
+
+```
+Post performance history:
+  ├── [2026-04-05 08:00] likes: 4, views: 120, comments: 1
+  ├── [2026-04-05 14:00] likes: 11, views: 340, comments: 3
+  ├── [2026-04-05 20:00] likes: 23, views: 580, comments: 5  ← milestone hit (20 likes)
+  └── [2026-04-06 08:00] likes: 28, views: 710, comments: 6
+```
+
+After every sync — milestone rules checked against the latest numbers. If a milestone is newly crossed — action prepared and approval sent.
+
+---
+
+**Rule Hierarchy — Three Levels:**
+
+```
+Business level (defaults for all products)
+  └── e.g. "Any post with 50+ likes → increase posting frequency"
+
+Product level (overrides business defaults for this product only)
+  └── e.g. "Samsung TV: any post with 20+ likes → repost with different variant"
+
+Post level (one-time override for a specific post only)
+  └── Set at post creation time for special cases
+```
+
+If a product has no rules defined → business-level rules apply.
+If a product has its own rules → product rules apply instead (full override, not merge).
+Post-level rules apply only to that one post regardless of product or business rules.
+
+---
+
+**Available Milestone Triggers:**
+
+| Trigger | Example |
+|---|---|
+| Likes reach X | 20 likes, 50 likes, 100 likes |
+| Views reach X | 500 views, 1000 views |
+| Comments reach X | 10 comments |
+| Shares reach X | 5 shares |
+| Engagement rate reaches X% | 5% engagement rate |
+| Any combination | 20 likes AND 5 shares |
+
+---
+
+**Available Actions:**
+
+**1. Repost with variant**
+Repost the same product using a different asset variant. You explicitly define what changes.
+
+```
+Action: Repost with variant
+  ├── Asset: different variant / same variant / let system pick least recently used variant
+  ├── Caption: same caption / new caption / modified caption (you specify changes)
+  ├── Platform-specific changes (per platform, optional):
+  │     ├── Facebook: same / different caption
+  │     ├── Instagram: same / different caption / different hashtags
+  │     ├── TikTok: same / different caption
+  │     └── YouTube: same title / modified title / same thumbnail / new thumbnail / same tags / updated tags
+  ├── Post to: same platforms / specific platforms only
+  └── Timing: immediately / after X days / add to queue
+```
+
+**2. Increase posting frequency**
+Temporarily increase how often this product appears in the schedule.
+
+```
+Action: Increase posting frequency
+  ├── New frequency: X times per week
+  ├── Duration: X days / until further notice
+  └── Note added to product: (e.g. "auto-increased — post hit 50 likes on [date]")
+```
+
+---
+
+**Approval flow:**
+
+When a milestone is hit and action is prepared:
+
+```
+WhatsApp: "Samsung TV post hit 20 likes ✓
+           [post preview]
+
+           Action ready: Repost with '15 sec hook' variant
+           Caption: same as original
+           Platforms: Facebook Page X, Instagram A
+           Timing: tomorrow 8pm slot
+
+           Approve / Modify / Skip"
+```
+
+You reply:
+- **Approve** → action queued, goes through normal post approval flow before publishing
+- **Modify** → system asks what to change (different variant? different time? different platform?)
+- **Skip** → action dismissed, milestone marked as seen, no further alerts for this post
+
+One milestone can only trigger one action — it does not fire again for the same post at the same milestone level.
+
+---
+
+**Setting up milestone rules:**
+
+Web app — Rules section per product and per business settings:
+- Add rule: select trigger (likes / views / etc + threshold) → select action → configure action details → save
+- Rules listed in order, active/inactive toggle per rule
+- Preview: "If this rule fires — here is what the prepared action will look like"
+
+WhatsApp — natural language:
+```
+"if any Samsung TV post gets 20 likes, repost it with a different video"
+"set a rule — if any post gets 50 likes, increase posting frequency for that product"
+"what milestone rules do I have for Samsung TV?"
+"remove the 20 likes rule from Samsung TV"
 ```
 
 ---
@@ -2275,6 +2456,7 @@ Example: Programming channel is scoped to JavaScript engineering. AI will not su
   Topics to Cover:
   Topics to Exclude:
   Reference Channels:
+    [Note: few channels name note incase get forget Fireship, ByteMonk, Transcode, LearnFree, ByteByteGo, onjsdev, The Modern Coder, CodeHead]
   Reference Videos:
   Script Style:
   Animation Style:
@@ -2305,6 +2487,7 @@ Example: Programming channel is scoped to JavaScript engineering. AI will not su
   Topics to Cover: Hiped Real News (Ex: Trump Assasination Attemp)
   Topics to Exclude:
   Reference Channels:
+    [Note:few channels name note incase get forget fern]
   Reference Videos:
   Script Style:
   Animation Style:
