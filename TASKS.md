@@ -25,7 +25,7 @@
   - MongoDB — what connects to it
   - Google Drive — which service talks to it
   - External APIs (Claude, Meta, TikTok, YouTube, Google Drive)
-  - WhatsApp message flow: user → OpenClaw → Claude → back to user
+  - Telegram message flow: user → OpenClaw → Claude → back to user
   - Web app flow: browser → Next.js → MongoDB
 
   **How deep to go:**
@@ -47,7 +47,7 @@
   Write one short paragraph per phase answering: "What must work before this phase is considered complete and I move to the next?"
 
   **How deep to go:**
-  2–4 bullet points per phase. Concrete and testable — "WhatsApp message sent and Claude replies" not "WhatsApp is working".
+  2–4 bullet points per phase. Concrete and testable — "Telegram message sent and Claude replies" not "Telegram is working".
 
   **What NOT to think about:**
   - Edge cases
@@ -64,11 +64,11 @@
   Design MongoDB collections needed for Core Infrastructure only. Do NOT design schema for Social Media Manager yet — that comes at the start of Phase 2.
 
   **Collections to design now:**
-  - `settings` — global config (API keys, thresholds, WhatsApp number)
+  - `settings` — global config (API keys, thresholds, Telegram bot token, your Telegram chat ID)
   - `job_queue` — all background jobs (type, status, payload, created, updated)
   - `drive_accounts` — registered Google Drive accounts (label, email, token, space)
   - `drive_files` — file index (file id, drive account, folder path, app, type, size, status)
-  - `whatsapp_messages` — message history (direction, content, timestamp, app context)
+  - `telegram_messages` — message history (direction, content, timestamp, app context)
 
   **How deep to go:**
   For each collection: field name, type, required/optional, possible values if limited. That's it.
@@ -155,26 +155,27 @@
 
 ---
 
-- [ ] **1.3 — WhatsApp Connection**
+- [ ] **1.3 — Telegram Bot Setup + Connection**
 
-  WhatsApp connected via OpenClaw and verified working.
+  Telegram bot created and connected via OpenClaw and verified working.
 
   **What to build:**
-  - QR scan flow working from web app or terminal
-  - WhatsApp session persisted (survives container restart)
-  - Send a real WhatsApp message to yourself via the system
+  - Create bot via @BotFather on Telegram — get bot token
+  - Add bot token to OpenClaw config and .env
+  - Choose delivery mode: webhook (instant, needs public IP/domain) or polling (simpler, no domain needed) — webhook preferred
+  - Send a real Telegram message to the bot from your personal account
   - Receive a reply back from Claude
 
   **How deep to go:**
   Get a real end-to-end message working. One message in, one reply out.
 
   **What NOT to think about:**
-  - Auto-reconnect handling (add in 1.10)
+  - Inline buttons and rich formatting yet (add in 1.10)
   - Message routing to different applications yet
   - Notification queuing yet
 
   **You are done when:**
-  You send a WhatsApp message to the system and Claude's reply arrives on your phone.
+  You send a Telegram message to the bot and Claude's reply arrives on your phone.
 
 ---
 
@@ -202,12 +203,12 @@
 
 ---
 
-- [ ] **1.5 — End-to-End WhatsApp ↔ Claude ↔ Web App Pipeline**
+- [ ] **1.5 — End-to-End Telegram ↔ Claude ↔ Web App Pipeline**
 
   Verify the full pipeline works together before building features on top of it.
 
   **What to build:**
-  - WhatsApp message → OpenClaw → Claude → response back to WhatsApp
+  - Telegram message → OpenClaw → Claude → response back to Telegram
   - Web app can read conversation history from MongoDB
   - Basic message routing: all messages currently go to one default handler
 
@@ -219,7 +220,7 @@
   - Complex Claude prompts yet
 
   **You are done when:**
-  10 WhatsApp messages sent, all replied to by Claude, all visible in web app, session survives restart.
+  10 Telegram messages sent, all replied to by Claude, all visible in web app, pipeline works after container restart.
 
 ---
 
@@ -228,7 +229,7 @@
   Core collections from the Phase 0 schema created and accessible from both containers.
 
   **What to build:**
-  - Create collections: `settings`, `job_queue`, `drive_accounts`, `drive_files`, `whatsapp_messages`
+  - Create collections: `settings`, `job_queue`, `drive_accounts`, `drive_files`, `telegram_messages`
   - Seed `settings` with default values (empty API keys, default thresholds)
   - Verify both Next.js and OpenClaw containers can read/write to MongoDB
 
@@ -276,7 +277,7 @@
 
   **What to build:**
   - Web app settings page: read all global settings from MongoDB
-  - Edit and save settings (API keys, alert thresholds, WhatsApp number)
+  - Edit and save settings (API keys, alert thresholds, Telegram number)
   - Both containers read from the same settings — verify a change in web app is immediately reflected in OpenClaw behaviour
 
   **How deep to go:**
@@ -302,41 +303,43 @@
     - Type 1 — Small continuous tasks (short, run frequently)
     - Type 2 — Multi-step pipeline jobs (checkpointed stages, resumable)
     - Type 3 — Heavy jobs (separate processing lane, does not block Type 1/2)
-  - Failed jobs: marked failed with error, alert sent via WhatsApp
+  - Failed jobs: marked failed with error, alert sent via Telegram
   - Web app: job queue status visible (pending, running, completed, failed counts)
 
   **How deep to go:**
-  Write one test job for each type. Verify it runs, completes, and shows in web app. Verify a failed job sends a WhatsApp alert.
+  Write one test job for each type. Verify it runs, completes, and shows in web app. Verify a failed job sends a Telegram alert.
 
   **What NOT to think about:**
   - Every job type you will eventually need — just prove the three lanes work
   - Complex retry logic — simple retry once on failure is enough for now
 
   **You are done when:**
-  One test job of each type runs successfully. One intentionally failed job triggers a WhatsApp alert.
+  One test job of each type runs successfully. One intentionally failed job triggers a Telegram alert.
 
 ---
 
-- [ ] **1.10 — WhatsApp Notification Service**
+- [ ] **1.10 — Telegram Notification Service**
 
-  Central notification service handling all outgoing WhatsApp messages from all applications.
+  Central notification service handling all outgoing Telegram messages from all applications.
 
   **What to build:**
-  - All outgoing WhatsApp messages go through one central service — no application sends directly
-  - Message queue: if WhatsApp is disconnected, messages wait and send when reconnected
-  - Auto-reconnect: if WhatsApp session drops, system attempts reconnect automatically
-  - QR rescan: if auto-reconnect fails, web app shows prominent alert with QR scan option
-  - Consistent message formatting across all applications
+  - All outgoing Telegram messages go through one central service — no application sends directly
+  - Message queue: if delivery fails, messages wait and retry automatically
+  - Rich message formatting — bold, code blocks, structured layouts using Telegram MarkdownV2
+  - Inline buttons for approvals — tappable [Approve] [Modify] [Skip] buttons, no typing needed
+  - Images sent as Telegram photos (previews, generated images)
+  - Video handling: videos never sent through Telegram — send Drive link or web app link instead
+  - Consistent formatting across all applications
 
   **How deep to go:**
-  Send a message through the service. Disconnect WhatsApp, send another — verify it queues. Reconnect — verify queued message sends. Simulate session drop and verify web app alert appears.
+  Send a text message through the service. Send a message with inline buttons. Send an image. Verify queuing on failure. Verify all arrive correctly formatted.
 
   **What NOT to think about:**
   - Per-application message templates yet (add as each app is built)
   - Message read receipts
 
   **You are done when:**
-  Message queuing on disconnect works. Auto-reconnect works. Web app alert shows on session drop.
+  Text message, inline button message, and image all sent successfully through the service. Queuing on failure verified.
 
 ---
 
@@ -365,14 +368,14 @@
 
 - [ ] **1.11 — System Health Monitoring**
 
-  RAM, CPU, disk, and Drive space monitored with WhatsApp alerts at thresholds.
+  RAM, CPU, disk, and Drive space monitored with Telegram alerts at thresholds.
 
   **What to build:**
   - Background job (Type 1) running every 15 minutes: check RAM, CPU, disk usage
   - Check Drive account space usage daily
-  - WhatsApp alert at configured thresholds (default: 80% warning, 90% urgent)
+  - Telegram alert at configured thresholds (default: 80% warning, 90% urgent)
   - Web app: system status page showing current usage with visual indicators
-  - "Show usage" via WhatsApp: one-message snapshot of all current metrics
+  - "Show usage" via Telegram: one-message snapshot of all current metrics
 
   **How deep to go:**
   Real metrics from the server. Real alerts sent. Web app page shows live data.
@@ -382,7 +385,7 @@
   - External uptime monitor (UptimeRobot — set up separately, outside this codebase)
 
   **You are done when:**
-  Artificially push a metric over threshold → WhatsApp alert received. Ask "show usage" on WhatsApp → snapshot received.
+  Artificially push a metric over threshold → Telegram alert received. Ask "show usage" on Telegram → snapshot received.
 
 ---
 
@@ -423,22 +426,22 @@
 ---
 
 - [ ] **2.2 — Business Profile Management**
-  Create, edit, switch between businesses. Web app + WhatsApp.
+  Create, edit, switch between businesses. Web app + Telegram.
 
 - [ ] **2.3 — Platform Account Connections**
   Facebook OAuth (Pages + Groups + Instagram), Instagram independent OAuth, TikTok OAuth, YouTube OAuth. Connect, disconnect, list connected accounts.
 
 - [ ] **2.4 — Product Library**
-  Create, edit, archive products. All fields from schema. Web app full editor. WhatsApp quick add.
+  Create, edit, archive products. All fields from schema. Web app full editor. Telegram quick add.
 
 - [ ] **2.5 — Content Category Library**
   Create, edit, archive categories. Web app full editor.
 
 - [ ] **2.6 — Asset Management**
-  Upload assets (web app + WhatsApp), Drive sync, file index updated, asset states (New / Used / Recently Used / Archived).
+  Upload assets (web app + Telegram), Drive sync, file index updated, asset states (New / Used / Recently Used / Archived).
 
 - [ ] **2.7 — Client Reviews Management**
-  Add review (web app form + WhatsApp forward), approval queue, approve/reject flow, privacy settings.
+  Add review (web app form + Telegram forward), approval queue, approve/reject flow, privacy settings.
 
 - [ ] **2.8 — Image Generation via Pippit.ai**
   Puppeteer integration, all image types working, one image at a time flow, approve/reject/generate another.
@@ -449,7 +452,7 @@
 - [ ] **2.10 — Post Creation Flow (Web App)**
   Full 9-step post creation: media selection, format, platform selection, content writing, platform settings, video handling, branding, scheduling, review and confirm.
 
-- [ ] **2.11 — Post Creation Flow (WhatsApp)**
+- [ ] **2.11 — Post Creation Flow (Telegram)**
   Conversational flow for quick posts. YouTube redirects to web app.
 
 - [ ] **2.12 — Entity-Based Scheduling + Slot Builder**
@@ -462,7 +465,7 @@
   Queue builds from slots. Queue view in web app. Manual reorder, skip, remove.
 
 - [ ] **2.15 — Post Approval Flow**
-  Approval required before posting (configurable). Web app approval queue. WhatsApp approval. Reminder after 2 hours of no response.
+  Approval required before posting (configurable). Web app approval queue. Telegram approval. Reminder after 2 hours of no response.
 
 - [ ] **2.16 — Facebook Pages Posting**
   All post types: photo, video, reel, story, carousel, link, text. First comment for hashtags.
@@ -486,7 +489,7 @@
   Full-year web app timeline. Colour-coded categories. Bangladesh + Islamic + international days. Add/edit/remove custom days.
 
 - [ ] **2.23 — Festival Profiles + Image Generation Flow**
-  Profile stores setup recipe only. Always generates fresh image. 2-day advance reminder via WhatsApp. Planning conversation flow.
+  Profile stores setup recipe only. Always generates fresh image. 2-day advance reminder via Telegram. Planning conversation flow.
 
 - [ ] **2.24 — Post History + Performance Tracking**
   All posted content stored with platform performance data. Per product and per category history views in web app.
@@ -495,7 +498,7 @@
   Each image and video asset supports multiple variants. Variant metadata (label, type, notes, state, usage history, performance) stored in MongoDB. Drive file ID links variant record to actual file. Web app variant manager per asset.
 
 - [ ] **2.26 — Milestone-Based Actions**
-  Performance data synced periodically from platform APIs. Milestone rule engine checks all recent posts after every sync. Three-level rule hierarchy (business / product / post). Two action types: repost with variant, increase posting frequency. Approval flow via WhatsApp and web app. Milestone actions recorded in post history.
+  Performance data synced periodically from platform APIs. Milestone rule engine checks all recent posts after every sync. Three-level rule hierarchy (business / product / post). Two action types: repost with variant, increase posting frequency. Approval flow via Telegram and web app. Milestone actions recorded in post history.
 
 ---
 

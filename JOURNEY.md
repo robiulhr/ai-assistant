@@ -21,7 +21,7 @@ This file follows the Software Development Life Cycle (SDLC):
 ### The Starting Point
 The project started as a personal need — one person running a business in Bangladesh, managing social media manually, researching products from China, trying to stay on top of information across multiple areas of interest, and learning languages. All of this was happening manually, scattered across different tools, taking too much time.
 
-The idea: build a single AI-powered assistant that handles all of this through WhatsApp and a web app — running on a personal VPS, fully owned, no subscriptions beyond the AI API itself.
+The idea: build a single AI-powered assistant that handles all of this through Telegram and a web app — running on a personal VPS, fully owned, no subscriptions beyond the AI API itself.
 
 ### Original Scope — 8 Modules
 The first version of requirements identified 8 separate modules:
@@ -49,7 +49,7 @@ Two principles were defined early that shaped every subsequent decision:
 
 **"AI Prepares, Human Approves"** — AI does all the heavy work but never takes final action alone. Every post, message, order, and publish requires an explicit human action at that exact moment. This came from recognising that automated actions with real-world consequences (sending supplier messages, posting content, placing orders) are high-stakes and must remain fully conscious decisions.
 
-**Natural Language Always** — The WhatsApp interface must always accept natural language. No command syntax to memorise. The system understands intent from whatever you say. This came from the insight that forgetting exact command syntax creates friction and makes the tool feel like a command-line interface rather than an intelligent assistant.
+**Natural Language Always** — The Telegram interface must always accept natural language. No command syntax to memorise. The system understands intent from whatever you say. This came from the insight that forgetting exact command syntax creates friction and makes the tool feel like a command-line interface rather than an intelligent assistant.
 
 ---
 
@@ -63,7 +63,7 @@ Planning was done at the business level first — what each feature does, how it
 Before planning individual applications, the shared infrastructure was defined. Key decisions:
 
 **Technology Stack:**
-- OpenClaw (port 18888) — WhatsApp + Claude API integration
+- OpenClaw (port 18888) — Telegram + Claude API integration
 - Next.js (port 17777) — web application
 - MongoDB (port 27017, already running on VPS) — all structured data
 - Google Drive — all file storage (never the server)
@@ -150,11 +150,23 @@ Identified as a needed feature but deliberately skipped for current version. Doc
 **AI Growth Assistant:**
 Initially placed as a standalone section inside Feature 1. Later correctly identified as part of Feature 2 — it belongs with competitor monitoring and product finding as Part C of the intelligence layer. All three parts feed into the same goal: making better content decisions.
 
+### Messaging Platform Decision — Switched from WhatsApp to Telegram
+
+Initially planned to use WhatsApp via OpenClaw with Baileys library. During pre-build research, key problems were found:
+- Baileys is unofficial — violates WhatsApp ToS, real account ban risk
+- QR scan gives OpenClaw linked device access to entire WhatsApp account — all chats, no permission scoping
+- Session management complexity — QR rescans needed when session expires
+
+**Decision: switched to Telegram.** Reasons: official bot API (no ban risk), bot only receives messages sent to it (no personal chat access), stateless (no session/QR scan ever), Telegram queues messages while bot is offline, rich formatting with inline buttons, free, OpenClaw supports Telegram natively.
+
+**Video handling:** Telegram bot API has 50MB file size limit — most product videos exceed this. Videos never sent through Telegram — system sends Drive link or web app link instead. Small files (images, short clips) sent directly. This is cleaner than sending large files through a messaging app.
+
 ### Key Planning Lessons
 - Fixed cycles feel like a natural starting point but are wrong for monitoring tasks — continuous queue is always the right model
 - Real-world actions (send, post, order) must always be separate, explicit, conscious steps — never bundled in an automated flow
 - Shipping calculation complexity was recognised early and deliberately scoped out — simple weight table only
 - Planning can become endless — the rule adopted: plan a feature in detail only when about to build it
+- WhatsApp unofficial libraries (Baileys, whatsapp-web.js) carry real ban risk and full account access — Telegram official bot API is always the better choice for personal assistants
 
 ### Planning File Structure
 The planning process produced a very large single document. Before starting implementation it was restructured into multiple files with clear purposes:
@@ -211,7 +223,7 @@ The planning process produced a very large single document. Before starting impl
 **Task 1.2 — OpenClaw + Claude**
 *(What was done, any gotchas)*
 
-**Task 1.3 — WhatsApp Connection**
+**Task 1.3 — Telegram Connection**
 *(What was done, any gotchas)*
 
 *(Continue for each task...)*

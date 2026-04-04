@@ -23,14 +23,14 @@ The AI does all research, drafting, scheduling, and preparation. The human makes
 
 Shared services that all applications depend on. Built first, before any application.
 
-**WhatsApp Interface**
-The primary way to interact with the system. Every application communicates through WhatsApp using natural language — no commands or syntax to remember. The system understands intent from whatever you say and asks one short question only if something is genuinely unclear.
+**Telegram Interface**
+The primary way to interact with the system. Every application communicates through Telegram using natural language — no commands or syntax to remember. The system understands intent from whatever you say and asks one short question only if something is genuinely unclear.
 
 **Web App**
 The secondary interface. Used for anything that needs a visual layout — schedules, asset libraries, dashboards, approval queues, settings. Accessible from any browser. Single user — no signup or multi-user management.
 
 **Claude API Gateway**
-All AI work across all applications goes through one central gateway. Manages model selection (Opus for complex reasoning, Sonnet for standard tasks, Haiku for simple tasks), tracks token usage per application, and enforces monthly budget limits. Alerts sent via WhatsApp when usage gets high.
+All AI work across all applications goes through one central gateway. Manages model selection (Opus for complex reasoning, Sonnet for standard tasks, Haiku for simple tasks), tracks token usage per application, and enforces monthly budget limits. Alerts sent via Telegram when usage gets high.
 
 **Job Queue**
 All background work runs through a central queue. Three types: small continuous tasks (run throughout the day with human-like gaps), multi-step pipeline jobs (checkpointed so they can resume if interrupted), and heavy jobs (run in a separate lane so they never block lighter tasks). Missed tasks are always reported — the system never auto-decides what to do with them.
@@ -44,11 +44,11 @@ Single database shared by all applications. All structured data — settings, pr
 **Settings Store**
 All configuration in one place. Global settings apply across everything. Each application also has its own settings that only affect that application. Readable and editable from the web app.
 
-**WhatsApp Notification Service**
-All outgoing WhatsApp messages from all applications go through one central service. If WhatsApp disconnects, messages queue and send when reconnected. Auto-reconnect attempted on session drop. QR rescan available from web app if auto-reconnect fails.
+**Telegram Notification Service**
+All outgoing Telegram messages from all applications go through one central service. Messages queue if delivery fails and send once connection restores. Consistent message formatting across all applications — uses Telegram's rich formatting (bold, inline buttons, images). All approvals sent with tappable inline buttons (Approve / Modify / Skip) — no typing needed.
 
 **System Health Monitoring**
-RAM, CPU, disk, and Drive storage monitored continuously. WhatsApp alerts at configurable thresholds. Web app shows live system status. Ask "show usage" on WhatsApp for an instant snapshot.
+RAM, CPU, disk, and Drive storage monitored continuously. Telegram alerts at configurable thresholds. Web app shows live system status. Ask "show usage" on Telegram for an instant snapshot.
 
 **Database Backups**
 Automatic daily backups to Google Drive. Daily backups kept for 7 days, weekly for 4 weeks, monthly for 6 months. Restore triggered manually.
@@ -63,7 +63,7 @@ Shared service used by any application that needs AI-generated images. Currently
 Manages all social media posting for one or more businesses. Handles content organisation, scheduling, asset management, and publishing across all platforms.
 
 ### Business Profiles
-The entire application is organised around businesses. Each business is a completely separate workspace with its own products, content, schedules, and connected platform accounts. Infrastructure underneath is shared. You can switch between businesses from the web app or WhatsApp.
+The entire application is organised around businesses. Each business is a completely separate workspace with its own products, content, schedules, and connected platform accounts. Infrastructure underneath is shared. You can switch between businesses from the web app or Telegram.
 
 ### Platform Accounts
 Each business connects to its own set of social media accounts:
@@ -106,7 +106,7 @@ A slot is a recurring time in the schedule. Each slot has a set of condition-bas
 Slots can be linked across multiple entities for cross-posting — define once, applies to all linked entities simultaneously.
 
 ### Post Approval
-By default every post requires your explicit approval before going out. Configurable — can be turned off per entity, per slot, or per content type. When approval is required, a preview is sent via WhatsApp or shown in the web app. If you do not respond within 2 hours, one reminder is sent. If still no response, the slot is skipped — nothing posts without your approval.
+By default every post requires your explicit approval before going out. Configurable — can be turned off per entity, per slot, or per content type. When approval is required, a preview is sent via Telegram or shown in the web app. If you do not respond within 2 hours, one reminder is sent. If still no response, the slot is skipped — nothing posts without your approval.
 
 ### Content Recycling
 When a slot's queue runs low, assets can be recycled — the same image or video used again but with a freshly generated caption. Never the exact same post twice. Recycling is off by default and configurable at four levels: business, slot, product, and category.
@@ -116,13 +116,13 @@ When a published post hits a performance milestone — a defined number of likes
 
 Two actions are available: repost the product using a different asset variant (with explicitly defined changes to caption, title, thumbnail, or other details per platform), or increase the posting frequency for that product temporarily.
 
-Rules are configured at three levels — business (default for all products), product (overrides business defaults), and per post (one-time override). Most products follow the business default. Products that need different treatment get their own rules. Rules are set from the web app or WhatsApp in natural language.
+Rules are configured at three levels — business (default for all products), product (overrides business defaults), and per post (one-time override). Most products follow the business default. Products that need different treatment get their own rules. Rules are set from the web app or Telegram in natural language.
 
 ### Special Days
-A full-year calendar of special days — Bangladesh national days, Islamic calendar, international days, and any custom days you add. Visible as a colour-coded timeline in the web app. For each special day you define how far in advance you want a preparation reminder. When the reminder fires, the system starts a planning conversation via WhatsApp — you decide what to post, generate a fresh image, and approve it. Festival profiles store the setup recipe only — a fresh image is always generated, never reused from a previous year.
+A full-year calendar of special days — Bangladesh national days, Islamic calendar, international days, and any custom days you add. Visible as a colour-coded timeline in the web app. For each special day you define how far in advance you want a preparation reminder. When the reminder fires, the system starts a planning conversation via Telegram — you decide what to post, generate a fresh image, and approve it. Festival profiles store the setup recipe only — a fresh image is always generated, never reused from a previous year.
 
 ### Post Creation
-Posts can be created from the web app (full editor) or WhatsApp (conversational flow). The web app handles complex posts — multiple platforms, video handling, YouTube metadata. WhatsApp handles quick posts. YouTube always requires the full web app flow — title, description, thumbnail, and visibility are all required.
+Posts can be created from the web app (full editor) or Telegram (conversational flow). The web app handles complex posts — multiple platforms, video handling, YouTube metadata. Telegram handles quick posts. YouTube always requires the full web app flow — title, description, thumbnail, and visibility are all required.
 
 ### Platform-Specific Behaviour
 Each platform has its own post types, media requirements, and settings enforced by the system. The system automatically checks media compatibility — aspect ratios, video lengths, file sizes — and flags issues before scheduling. Auto-crop is offered when a ratio mismatch is detected.
@@ -140,7 +140,7 @@ Tracks competitor activity across Facebook, Instagram, YouTube, TikTok, and webs
 Monitors trend sources and your own product niche. Accepts both AI-discovered trends and human-provided resources (competitor links, topics, videos, articles). Suggests new products and content ideas. Shortlist products for later action.
 
 **Part C — Growth Assistant**
-Analyses your own posting performance — reach, engagement, best/worst content, posting consistency, audience growth. Suggests best times to post, which content to do more of, which products need attention. Weekly WhatsApp summary. Monthly web app report. Ask anything conversationally. Never auto-changes anything — recommendations only.
+Analyses your own posting performance — reach, engagement, best/worst content, posting consistency, audience growth. Suggests best times to post, which content to do more of, which products need attention. Weekly Telegram summary. Monthly web app report. Ask anything conversationally. Never auto-changes anything — recommendations only.
 
 ---
 
@@ -148,7 +148,7 @@ Analyses your own posting performance — reach, engagement, best/worst content,
 
 Automatically researches, produces, and publishes original short-form video content for interest-based channels across YouTube, Facebook, TikTok, and Instagram. Style: short, animated, fact-based, fast-paced (Zack D Films style). Niches: science, math, tech, programming, and others.
 
-Each channel has its own style guide, tone, and content strategy. You stay involved at every stage through WhatsApp — giving quick approvals or feedback. Nothing moves to the next step without your signal.
+Each channel has its own style guide, tone, and content strategy. You stay involved at every stage through Telegram — giving quick approvals or feedback. Nothing moves to the next step without your signal.
 
 **Idea finding — two sources:**
 - AI monitors sources (RSS, YouTube trending, academic feeds, news) and surfaces ideas
@@ -164,10 +164,10 @@ Each stage requires your approval before the next begins.
 ## Application 3 — Reminder & Calendar
 
 ### Feature 1 — Reminder System
-Set reminders via WhatsApp in natural language. One-time or recurring. Reminder delivered via WhatsApp at the right time. Manage and view all reminders from web app.
+Set reminders via Telegram in natural language. One-time or recurring. Reminder delivered via Telegram at the right time. Manage and view all reminders from web app.
 
 ### Feature 2 — Calendar Manager
-Two-way sync with Google Calendar. View, add, and edit events from the web app. Morning briefing sent via WhatsApp at a configurable time with the day's events. Ask about your schedule anytime via WhatsApp.
+Two-way sync with Google Calendar. View, add, and edit events from the web app. Morning briefing sent via Telegram at a configurable time with the day's events. Ask about your schedule anytime via Telegram.
 
 ---
 
@@ -175,13 +175,13 @@ Two-way sync with Google Calendar. View, add, and edit events from the web app. 
 
 Supports multiple languages — each configured independently with its own lessons, notes, and schedule. Currently active: English and Arabic. More languages can be added at any time.
 
-Daily lessons delivered via WhatsApp at a configurable time. Lesson types rotate: vocabulary, grammar, idioms, phrasal verbs, pronunciation tips. Take notes during lessons via WhatsApp — saved and organised by topic. Flag notes for research or practice — system sends periodic reminders for flagged items. Full lesson archive and note editor in web app.
+Daily lessons delivered via Telegram at a configurable time. Lesson types rotate: vocabulary, grammar, idioms, phrasal verbs, pronunciation tips. Take notes during lessons via Telegram — saved and organised by topic. Flag notes for research or practice — system sends periodic reminders for flagged items. Full lesson archive and note editor in web app.
 
 ---
 
 ## Application 5 — Personal Knowledge & Brand Intelligence
 
-Monitors information sources across your interest areas and delivers curated briefings twice a day via WhatsApp. Sources include RSS feeds, YouTube channels, and newsletters across topics like science, tech, Islam, AI, and others.
+Monitors information sources across your interest areas and delivers curated briefings twice a day via Telegram. Sources include RSS feeds, YouTube channels, and newsletters across topics like science, tech, Islam, AI, and others.
 
 Briefings are summaries — not full articles. Saves interesting items for later reading in the web app. Content ideas surfaced from briefings can be forwarded directly to the AI Content Creator.
 

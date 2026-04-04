@@ -23,7 +23,7 @@ For build progress → see `TASKS.md`
 
 | Component | Technology | Port |
 |---|---|---|
-| WhatsApp + AI gateway | OpenClaw | 18888 |
+| Telegram + AI gateway | OpenClaw | 18888 |
 | Web application | Next.js | 17777 |
 | Database | MongoDB | 27017 (external) |
 | File storage | Google Drive | — |
@@ -56,6 +56,10 @@ META_APP_SECRET=
 TIKTOK_CLIENT_KEY=
 TIKTOK_CLIENT_SECRET=
 
+# Telegram Bot (create via @BotFather)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=        # your personal Telegram chat ID — bot messages you here
+
 # OpenClaw
 OPENCLAW_API_KEY=
 
@@ -81,9 +85,9 @@ OPENCLAW_PORT=18888
 
 ---
 
-## Step 3 — WhatsApp Connection
+## Step 3 — Telegram Bot Setup
 
-*(Filled in during Task 1.3)*
+*(Filled in during Task 1.3 — BotFather setup, token, webhook configuration)*
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Overview
 A unified AI-powered personal assistant platform running on a VPS inside Docker.
-Accessible via WhatsApp (for commands/interaction) and a web app (for UI management).
+Accessible via Telegram (for commands/interaction) and a web app (for UI management).
 Single user (personal use). No login required for now.
 
 ---
@@ -41,7 +41,7 @@ This principle applies to every module built now and in the future.
 
 ### 2 — Human-Like Conversation, Lowest Possible Token Cost
 
-The WhatsApp experience should feel like talking to a smart person who knows you well —
+The Telegram experience should feel like talking to a smart person who knows you well —
 not interacting with a command-line tool or a chatbot.
 
 **How this works in practice:**
@@ -114,21 +114,21 @@ at that specific moment.
 Product surfaces in your daily list. You mark it Interested. Deep investigation runs automatically. Nothing else happens. No supplier search triggered yet.
 
 **Stage 2 — Supplier Research (you initiate when ready)**
-Happens when you decide — could be same day, could be days later. You trigger it yourself from WhatsApp or web app:
-- WhatsApp: say something like "find suppliers for that neck fan" or "!supplier neck fan power bank"
+Happens when you decide — could be same day, could be days later. You trigger it yourself from Telegram or web app:
+- Telegram: say something like "find suppliers for that neck fan" or "!supplier neck fan power bank"
 - Web app: open the product and click Find Suppliers
 
-System finds and compares top 5 suppliers. WhatsApp gets a short summary — name, price, MOQ, rating, factory or trader. Web app shows full comparison table. You shortlist one or two. Nothing sent yet.
+System finds and compares top 5 suppliers. Telegram gets a short summary — name, price, MOQ, rating, factory or trader. Web app shows full comparison table. You shortlist one or two. Nothing sent yet.
 
 **Stage 3 — Inquiry Draft and Send (web app only, fully manual)**
-Only from the web app. Never from WhatsApp.
+Only from the web app. Never from Telegram.
 When you are ready — open the supplier profile, read the AI-drafted inquiry message, edit it however you want, then press Send yourself. System never sends anything without you explicitly pressing send on that exact message at that exact moment.
 
 Draft and send are two different actions even within Stage 3. You can save a draft and come back to it later. Nothing goes anywhere until you press send.
 
 ```
 Stage 1 — Discovery        → automated, no action needed
-Stage 2 — Supplier search  → you trigger (WhatsApp or web app)
+Stage 2 — Supplier search  → you trigger (Telegram or web app)
 Stage 3 — Draft            → web app only, you read and edit
 Stage 3 — Send             → web app only, you press send explicitly
 ```
@@ -190,11 +190,11 @@ No permanent files stored on the VPS. Server disk is temporary workspace only.
 
 **D — Three-layer management:**
 
-- **WhatsApp** — proactive alerts when something breaks or usage gets high. You know instantly without going to check anything.
-- **Web app dashboard** — visual status page showing all services, resource usage, and logs. Accessible from any browser including phone. For the circular problem (if OpenClaw/WhatsApp itself breaks, it cannot alert you via WhatsApp) — the web app shows the alert instead since it is a separate container.
+- **Telegram** — proactive alerts when something breaks or usage gets high. You know instantly without going to check anything.
+- **Web app dashboard** — visual status page showing all services, resource usage, and logs. Accessible from any browser including phone. For the circular problem (if OpenClaw/Telegram itself breaks, it cannot alert you via Telegram) — the web app shows the alert instead since it is a separate container.
 - **Terminal (SSH)** — always available as fallback for serious issues and deploying updates. Never the first option but always there.
 
-**WhatsApp reconnection:** When WhatsApp session expires or drops, the web app shows a QR code page — you scan from your phone browser to reconnect without needing a computer.
+**Telegram reconnection:** When Telegram session expires or drops, the web app shows a QR code page — you scan from your phone browser to reconnect without needing a computer.
 
 **E — External uptime monitor (UptimeRobot, free):**
 An external service outside the VPS pings the app every 5 minutes. If the VPS itself goes down entirely, this sends an alert via email or Telegram. Completely independent — works even when the entire server is offline.
@@ -205,7 +205,7 @@ An external service outside the VPS pings the app every 5 minutes. If the VPS it
 
 You can check resource and API usage at any time.
 
-**From WhatsApp — quick summary on demand:**
+**From Telegram — quick summary on demand:**
 Ask anything like "show usage" or "how is the server" and get a one-message snapshot:
 ```
 Server: RAM 2.1GB/4GB  CPU 34%  Temp disk: 1.2GB
@@ -329,7 +329,7 @@ When total daily budget is running low — tasks are prioritised in this order:
 4. Background scanning and analysis
 5. Pre-scheduled batch work
 
-Lower priority tasks queue for tomorrow. You get a WhatsApp note if significant background work was deferred.
+Lower priority tasks queue for tomorrow. You get a Telegram note if significant background work was deferred.
 
 ---
 
@@ -373,7 +373,7 @@ Run in a separate lane — they do not touch the main queue at all. The main que
 | Heavy one-time jobs | Separate lane — main queue unaffected |
 
 #### General Queue Behaviours
-- If a job fails — retry automatically a set number of times, then mark failed and alert you via WhatsApp
+- If a job fails — retry automatically a set number of times, then mark failed and alert you via Telegram
 - Priority levels — your manual requests jump the queue ahead of background work
 - All jobs from all applications visible in one place in the web app
 
@@ -385,7 +385,7 @@ For time-based work — "run this at 8am every day", "post this at 7pm", "send w
 
 #### Missed Tasks When System Was Down
 
-The scheduler never auto-decides what to do with missed tasks. When the system comes back online it checks what was missed and sends you a WhatsApp message immediately:
+The scheduler never auto-decides what to do with missed tasks. When the system comes back online it checks what was missed and sends you a Telegram message immediately:
 
 ```
 System was down for 2h 14min (11:30am – 1:44pm).
@@ -420,14 +420,37 @@ All scheduled tasks visible in one calendar view in the web app.
 
 ---
 
-### 3 — WhatsApp Notification Service
+### 3 — Telegram Notification Service
 
-Every application sends WhatsApp messages — alerts, briefings, progress updates, confirmations. All go through one central service.
+Every application sends Telegram messages — alerts, briefings, progress updates, confirmations. All go through one central service.
 
-- If WhatsApp is temporarily disconnected — messages queue up and send once reconnected, nothing lost
-- Rate limiting handled centrally — one service manages WhatsApp limits for all applications
+**How Telegram works in this system:**
+- A Telegram bot is created once via @BotFather — gives a bot token
+- Bot token stored in settings, used by OpenClaw to send and receive messages
+- You message the bot from your personal Telegram account
+- Bot only receives messages sent directly to it — no access to your personal chats
+- Delivery mode: webhook (Telegram calls your server instantly) — preferred over polling
+- No session management, no QR scan, no reconnect complexity — Telegram bot API is stateless
+
+**Message formatting:**
+- Rich formatting using Telegram MarkdownV2 — bold, italic, code blocks, structured layouts
+- Inline buttons for all approvals — tappable [Approve] [Modify] [Skip] — no typing needed
+- Images sent as Telegram photos (post previews, generated images — up to 10MB)
+- Videos never sent through Telegram — Drive link or web app link sent instead (Telegram bot limit is 50MB, most product videos exceed this)
+
+**Reliability:**
+- If delivery fails — messages queue and retry automatically, nothing lost
+- Rate limiting handled centrally — one service manages Telegram API limits for all applications
 - Consistent message style across all applications
 - Incoming messages (your replies) routed to the correct application based on context
+
+**Network and bandwidth:**
+- Text messages: negligible bandwidth (a few KB each)
+- Images: 100KB–5MB per image
+- Videos: never through Telegram — sent as links only
+- Your VPS internet handles all bot ↔ Telegram API traffic
+- Your phone internet handles your personal Telegram app traffic
+- Both are completely separate — one does not affect the other
 
 ---
 
@@ -525,7 +548,7 @@ This index is what powers the unified view — the web app reads the index, not 
 3. Same folder structure created on the new account as files are uploaded to it
 4. Account joins the routing pool — new uploads start going there automatically
 5. If files were queued (waiting because all accounts were full) — they upload to the new account immediately
-6. WhatsApp confirmation: "New Drive account added — X GB available. Y pending files uploaded."
+6. Telegram confirmation: "New Drive account added — X GB available. Y pending files uploaded."
 
 Old files stay exactly where they are. No migration required. The unified view continues working without any change.
 
@@ -535,8 +558,8 @@ Old files stay exactly where they are. No migration required. The unified view c
 
 | Threshold | Action |
 |---|---|
-| Any account at 80% | WhatsApp warning — time to add a new account |
-| Any account at 95% | Urgent WhatsApp alert |
+| Any account at 80% | Telegram warning — time to add a new account |
+| Any account at 95% | Urgent Telegram alert |
 | Any account at 100% | Uploads to that account stop. Files that were routed there queue on server. System re-routes new uploads to other accounts. Alert sent with queued file count. Nothing lost. |
 
 ---
@@ -567,7 +590,7 @@ All configuration lives in one place, organised into two levels. Every applicati
 - API keys (Claude, Google, Meta, TikTok etc.)
 - Alert thresholds (RAM, CPU, disk, Drive)
 - Claude API monthly budget and model tier rules
-- WhatsApp phone number and connection
+- Telegram bot token and your personal chat ID
 
 **App-specific settings** — only relevant to their own application:
 - Social Media Manager: posting schedules, platform accounts, special days calendar
@@ -619,10 +642,10 @@ Shared service used by any application that needs AI-generated images. All reque
 
 ### 1. OpenClaw (port 18888)
 - AI brain of the system
-- Connected to WhatsApp
+- Connected to Telegram
 - Talks to Claude API
 - Triggers actions in Main App via internal Docker network
-- Handles all WhatsApp command flows
+- Handles all Telegram command flows
 
 ### 2. Main App — Next.js (port 17777)
 - Single unified web application
@@ -641,7 +664,7 @@ MongoDB already running on VPS (port 27017). All AI Assistant data goes here. On
 ### Shared Collections (used across all applications)
 - Job queue records
 - Scheduler records and history
-- WhatsApp message queue and conversation history
+- Telegram message queue and conversation history
 - System health logs and metrics
 - Claude API usage records (per app, per day, per model tier)
 - Google Drive account registry and file index
@@ -684,7 +707,7 @@ These records have long-term business value. Deleting them loses real intelligen
 | Claude API daily usage records | 12 months |
 | System health metrics | 90 days |
 | Job queue completed records | 30 days |
-| WhatsApp message history | 60 days |
+| Telegram message history | 60 days |
 
 **Archiving vs deleting:**
 When operational records pass their retention period they move to an archive — still stored, not visible in normal views, not slowing down queries. Permanent deletion only after 2 years or manually from the web app. Nothing is hard-deleted automatically.
@@ -707,12 +730,12 @@ Google Drive — already in use, survives VPS failure, accessible from anywhere.
 | Monthly | First day of each month | Last 6 months |
 
 **Backup verification:**
-After every backup completes — system confirms the file exists on Drive, is the expected size, and is not corrupted. Silent on success. Immediate WhatsApp alert on any failure.
+After every backup completes — system confirms the file exists on Drive, is the expected size, and is not corrupted. Silent on success. Immediate Telegram alert on any failure.
 
 **Alerts:**
-- Backup failed → immediate WhatsApp alert
-- Verification failed → immediate WhatsApp alert
-- No backup in last 25 hours → WhatsApp alert (catches silent failures)
+- Backup failed → immediate Telegram alert
+- Verification failed → immediate Telegram alert
+- No backup in last 25 hours → Telegram alert (catches silent failures)
 - Weekly confirmation every Sunday — "Backup healthy. Last 7 days all verified."
 
 **Restore:**
@@ -723,28 +746,29 @@ Compressed MongoDB dump for a personal system starts at a few MB, grows slowly. 
 
 ---
 
-## WhatsApp Session Management
+## Telegram Bot Connection
 
-WhatsApp connection via OpenClaw works like WhatsApp Web — established once by QR scan, persists across restarts. Three situations handled:
+Telegram bot API is stateless — no session, no QR scan, no reconnect complexity.
 
-**1 — Initial setup**
-Scan QR code once from the WhatsApp page in the web app. Session saved permanently — survives system restarts without rescanning.
+**Initial setup (one time only):**
+1. Message @BotFather on Telegram
+2. Create a new bot — get a bot token
+3. Add token to settings and .env
+4. Add your personal Telegram chat ID to settings (so bot knows who to message)
+5. Done — bot is live immediately
 
-**2 — Temporary drop (auto-recovers)**
-Network hiccup or WhatsApp server issue. System automatically retries up to 5 times with increasing gaps between attempts. Recovers silently — no action needed from you. Most drops resolve within seconds or minutes.
+**Delivery mode — webhook (preferred):**
+Telegram calls your VPS webhook URL the instant a message is sent. Requires your VPS to have a public IP (it does). Instant delivery, no polling overhead.
 
-**3 — Full session expiry (QR rescan required)**
-Session fully expired or WhatsApp logged it out. Since WhatsApp is down, an alert via WhatsApp is impossible. Instead:
-- Web app shows a prominent banner on every page — "WhatsApp disconnected — rescan required"
-- System monitor and WhatsApp page both show the QR code
-- Scan from phone browser — no computer needed
-- Connection restored — system resumes, all queued messages send immediately
-- External uptime monitor (UptimeRobot) sends email/Telegram alert as the fallback notification
+**If webhook fails — polling fallback:**
+OpenClaw polls Telegram API every few seconds for new messages. Slightly slower but works without any domain or SSL setup. Used as fallback if webhook has issues.
 
-**Auto-reconnect rules:**
-- Temporary drop → retry 5 times, gaps increasing between each attempt
-- All 5 fail → switch to QR rescan mode, trigger external alert
-- On reconnect → queued WhatsApp messages send in order, nothing lost
+**If bot goes offline (container down):**
+- Messages sent while container is down are queued by Telegram for up to 24 hours
+- When container restarts — all queued messages delivered immediately
+- No reconnect needed — bot token never expires
+- Web app shows container status on system monitor page
+- External uptime monitor (UptimeRobot) sends email alert if container is down
 
 ---
 
@@ -802,7 +826,7 @@ Sidebar (left, always visible)
       ├── Monitor (health + Claude API usage)
       ├── Settings
       ├── Backup & Restore
-      └── WhatsApp
+      └── Telegram
 ```
 
 ---
@@ -832,7 +856,7 @@ Each business has completely independent post queues, schedules, content categor
 
 **In the web app** — switch between businesses from the sidebar. Everything shown belongs to the currently selected business.
 
-**On WhatsApp** — one business is set as active at a time. All WhatsApp interactions apply to the active business. Switch by saying "switch to clothing brand" or from the web app.
+**On Telegram** — one business is set as active at a time. All Telegram interactions apply to the active business. Switch by saying "switch to clothing brand" or from the web app.
 
 ---
 
@@ -858,8 +882,8 @@ One Meta login covers Facebook Pages, Facebook Groups, and any Instagram account
 Both methods can be used at the same time. Each Instagram account shows which method it was connected through.
 
 **Token expiry — handled proactively:**
-- 7 days before expiry → WhatsApp alert to reconnect before interruption
-- Expires before reconnect → affected scheduled posts paused (not cancelled), WhatsApp alert sent, posts resume once reconnected
+- 7 days before expiry → Telegram alert to reconnect before interruption
+- Expires before reconnect → affected scheduled posts paused (not cancelled), Telegram alert sent, posts resume once reconnected
 - Each account shows token status in web app: Active / Expiring Soon / Expired
 
 **Removing accounts:**
@@ -973,7 +997,7 @@ Product — [Name]
   │
   ├── Client Reviews
   │     ├── Text reviews (quote + reviewer name/alias + source)
-  │     ├── Screenshots (WhatsApp chats, Facebook comments, Messenger, email)
+  │     ├── Screenshots (Telegram chats, Facebook comments, Messenger, email)
   │     ├── Video testimonials
   │     ├── Rating (optional — e.g. ⭐⭐⭐⭐⭐)
   │     ├── Status per review: Pending Approval / Approved / Rejected / Used / Archived
@@ -998,7 +1022,7 @@ Product — [Name]
               └── Post status (Draft / Scheduled / Published / Failed / Archived)
 ```
 
-**Posting frequency from WhatsApp — natural language, no format to remember:**
+**Posting frequency from Telegram — natural language, no format to remember:**
 ```
 "post Samsung TV more often"
 "I'm running ads on the TV, push it more this month"
@@ -1006,7 +1030,7 @@ Product — [Name]
 "reduce posting on the speaker, it's out of stock"
 ```
 System understands intent from whatever you say. Asks one short question only if something is unclear.
-Frequency end date reminder sent via WhatsApp 2 days before it expires.
+Frequency end date reminder sent via Telegram 2 days before it expires.
 
 ---
 
@@ -1169,7 +1193,7 @@ Manual override:
 
 #### Special Event Conflict Handling
 
-When a special event activates at the same time as a regular slot — if a rule covers it, it is handled automatically. If no rule covers it, system sends a WhatsApp notification:
+When a special event activates at the same time as a regular slot — if a rule covers it, it is handled automatically. If no rule covers it, system sends a Telegram notification:
 
 ```
 "Eid ul-Fitr is tomorrow. Your special event (8pm greetings) conflicts
@@ -1191,7 +1215,7 @@ When a slot's queue runs low or empty — the system reuses assets (images, vide
 
 **Web app** — visual schedule grid showing all slots across the week. Full slot editor with condition builder. Rules listed in order — drag to reorder priority. Preview shows what the slot would post today given current conditions.
 
-**WhatsApp — natural language:**
+**Telegram — natural language:**
 ```
 "add a slot every day at 8am for product videos"
 "add a rule to the 8pm slot — if it's Friday post fun content"
@@ -1257,7 +1281,7 @@ Examples of sensible defaults:
 
 The 12-hour recycling preparation flow only triggers when recycling is enabled at both the product/category level AND the slot allows it. If recycling is off — slot is skipped and you get an alert that no content is available.
 
-**From WhatsApp:**
+**From Telegram:**
 ```
 "turn on recycling for Samsung TV"
 "stop recycling fun posts"
@@ -1382,7 +1406,7 @@ Action: Increase posting frequency
 When a milestone is hit and action is prepared:
 
 ```
-WhatsApp: "Samsung TV post hit 20 likes ✓
+Telegram: "Samsung TV post hit 20 likes ✓
            [post preview]
 
            Action ready: Repost with '15 sec hook' variant
@@ -1409,7 +1433,7 @@ Web app — Rules section per product and per business settings:
 - Rules listed in order, active/inactive toggle per rule
 - Preview: "If this rule fires — here is what the prepared action will look like"
 
-WhatsApp — natural language:
+Telegram — natural language:
 ```
 "if any Samsung TV post gets 20 likes, repost it with a different video"
 "set a rule — if any post gets 50 likes, increase posting frequency for that product"
@@ -1424,21 +1448,21 @@ WhatsApp — natural language:
 **Stage 1 — Early warning (queue running low)**
 When a product or category queue drops below threshold (default: 3 posts remaining):
 ```
-WhatsApp: "Samsung TV queue is running low — 2 posts remaining.
+Telegram: "Samsung TV queue is running low — 2 posts remaining.
 Add new content to avoid recycling."
 ```
 
 **Stage 2 — Queue empty, slot approaching (T-12 hours)**
 12 hours before a slot with no new content available:
 ```
-WhatsApp: "No new content for Samsung TV — 8pm slot tonight.
+Telegram: "No new content for Samsung TV — 8pm slot tonight.
 Should I prepare a recycled post as backup?"
 ```
 
 **If you say yes:**
 System prepares recycled post — picks best asset not used recently, generates fresh caption using product details. Sends full preview for approval:
 ```
-WhatsApp: "Recycled post ready for review.
+Telegram: "Recycled post ready for review.
 
 Product: Samsung TV 43"
 Asset: [product photo from March]
@@ -1456,7 +1480,7 @@ Slot marked empty. System skips it. You handle manually.
 **Stage 3 — New content added after recycled post is scheduled**
 If new content is added after a Recyclable post is scheduled but before the slot fires:
 
-- **Slot > 2 hours away** — auto-swap. New content takes the slot. Recycled post moves to next available slot. WhatsApp notification:
+- **Slot > 2 hours away** — auto-swap. New content takes the slot. Recycled post moves to next available slot. Telegram notification:
 ```
 "New asset added for Samsung TV.
 Moved recycled post to next slot.
@@ -1474,7 +1498,7 @@ New content always gets priority. Recycled post never cancelled — moves to nex
 **Failed post handling:**
 ```
 Post fails → retry automatically up to 3 times (15 min gaps)
-All retries fail → status: Failed → WhatsApp alert
+All retries fail → status: Failed → Telegram alert
 → In web app: options to retry manually / reschedule / skip
 → Slot continues normally for next post — nothing blocked
 ```
@@ -1545,11 +1569,11 @@ Step 9 — Review and confirm
 
 #### Instant Posting
 
-Publishes immediately. Available from both web app and WhatsApp.
+Publishes immediately. Available from both web app and Telegram.
 
 One confirmation always shown before publishing — never goes out without your explicit "yes" at that exact moment.
 
-**From WhatsApp:**
+**From Telegram:**
 ```
 You: "post this now to Electronics page"
 [attach image]
@@ -1637,7 +1661,7 @@ Each platform has different post types, required fields, media specs, and unique
 
 **What the system handles:**
 - Posts timed by system scheduler
-- Failed posts flagged immediately — WhatsApp alert sent
+- Failed posts flagged immediately — Telegram alert sent
 
 ---
 
@@ -1768,7 +1792,7 @@ Each platform has different post types, required fields, media specs, and unique
 - Tags: 500 characters total
 
 **YouTube-specific rule:**
-YouTube never posts instantly. Every YouTube post goes through the full scheduling flow — title, description, thumbnail, visibility, and category are all required before the post can be queued. This is enforced in both web app and WhatsApp flows (WhatsApp redirects to web app for YouTube).
+YouTube never posts instantly. Every YouTube post goes through the full scheduling flow — title, description, thumbnail, visibility, and category are all required before the post can be queued. This is enforced in both web app and Telegram flows (Telegram redirects to web app for YouTube).
 
 **What the system handles:**
 - Shorts auto-detection — if video is 9:16 and under 60 sec, system flags it as a Short candidate
@@ -1778,7 +1802,7 @@ YouTube never posts instantly. Every YouTube post goes through the full scheduli
 
 ---
 
-#### From WhatsApp — conversational flow
+#### From Telegram — conversational flow
 
 For quick posts. System asks only what is missing.
 
@@ -1821,7 +1845,7 @@ Not every business uses every platform. When setting up a business only the rele
 
 Applies to AI-prepared content — recycled posts with new captions, AI-generated captions for scheduled posts. Manually created posts need no approval since you created them directly.
 
-**From WhatsApp — quick approval:**
+**From Telegram — quick approval:**
 ```
 System: "Recycled post ready for Samsung TV — 8pm tonight.
 
@@ -1851,9 +1875,9 @@ All posts waiting for approval shown in a dedicated section in the web app. Revi
 
 ---
 
-### WhatsApp Interaction — Social Media Manager
+### Telegram Interaction — Social Media Manager
 
-All interactions via WhatsApp use natural language. No command syntax required.
+All interactions via Telegram use natural language. No command syntax required.
 
 Examples:
 - "What's scheduled for today?"
@@ -1873,10 +1897,10 @@ All assets for all products and categories are managed here. Available from two 
 
 #### Asset Sources
 
-| Source | Web App | WhatsApp |
+| Source | Web App | Telegram |
 |---|---|---|
 | Manual upload | ✓ — file browser, bulk upload | ✗ |
-| WhatsApp send | ✗ | ✓ — send media + say where it belongs |
+| Telegram send | ✗ | ✓ — send media + say where it belongs (files up to 50MB — larger files use web app or Drive import) |
 | Google Drive import | ✓ — browse folder structure, select files | ✗ |
 | AI image generation | ✓ — prompt editor, preview, approve | ✓ — conversational flow |
 | AI caption generation | ✓ — multiple variations, keep what you like | ✓ — sent back for review |
@@ -1928,7 +1952,7 @@ Festival / greeting:
 
 Review / testimonial:
   Required: Review text (the quote), product linked to
-  Optional: Reviewer name or alias, star rating, source (Facebook / WhatsApp / etc.), background/colour scheme
+  Optional: Reviewer name or alias, star rating, source (Facebook / Telegram / etc.), background/colour scheme
 
 Fun / entertainment, Notice, Educational:
   Optional: Reference image, colour scheme, additional style notes
@@ -1941,7 +1965,7 @@ System generates one image, you review, then decide if you want another.
 **Web app:**
 Select image type → system shows required and optional fields for that type → fill in → generate → branding optional → preview → approve / modify / reject → if approved saved to library → "Generate another?"
 
-**WhatsApp:**
+**Telegram:**
 ```
 You: "generate a product image for Samsung TV"
 System: "Prompt?"
@@ -1953,7 +1977,7 @@ You: [sends 2 photos]
 System: "Model reference? (send or skip)"
 You: "skip"
 System: "Generating..."
-→ One image sent to WhatsApp
+→ One image sent to Telegram
 System: "Approve / Modify / Reject / Generate another"
 You: "modify — warmer lighting"
 System: "Generating updated version..."
@@ -1969,7 +1993,7 @@ Temp versions kept during session. Auto-cleared after 1 hour of inactivity.
 When queue drops below threshold — system notifies and asks what to do first. Only generates if you choose to.
 
 ```
-WhatsApp: "Samsung TV image queue is low — 2 posts remaining.
+Telegram: "Samsung TV image queue is low — 2 posts remaining.
 
 1. Generate new images (AI)
 2. Recycle existing content
@@ -1980,7 +2004,7 @@ WhatsApp: "Samsung TV image queue is low — 2 posts remaining.
 Option 1 only shown if AI generation is enabled for this product (configurable per product/category, default Off). If you choose generate — starts the one-at-a-time generation flow above. Never generates automatically without your instruction.
 
 **AI Caption Generation:**
-Claude generates captions from product details — key features, selling points, price, audience. Multiple variations at once. Review in web app or WhatsApp, keep what you like, discard the rest. Saved to product caption library.
+Claude generates captions from product details — key features, selling points, price, audience. Multiple variations at once. Review in web app or Telegram, keep what you like, discard the rest. Saved to product caption library.
 
 ---
 
@@ -2010,7 +2034,7 @@ Profile stores the recipe — never the final image. Every year = fresh generati
 **Scenario 1 — First time this festival is handled:**
 
 ```
-WhatsApp: "Eid ul-Fitr is in 2 days. Do you want to post anything?"
+Telegram: "Eid ul-Fitr is in 2 days. Do you want to post anything?"
 
 You: "yes"
 System: "What kind of post? (greeting / promotional / fun / educational)"
@@ -2040,7 +2064,7 @@ Setup saved for next Eid."
 **Scenario 2 — Festival handled before (profile exists):**
 
 ```
-WhatsApp: "Eid ul-Fitr is in 2 days.
+Telegram: "Eid ul-Fitr is in 2 days.
 
 Last Eid setup:
   Post type: Greeting
@@ -2108,7 +2132,7 @@ Actions:
   View / edit profile
   View past posts
   Change reminder timing
-  Start planning now (triggers WhatsApp conversation immediately)
+  Start planning now (triggers Telegram conversation immediately)
   Disable for this year (skips without deleting)
   Mark as not relevant for this business
 ```
@@ -2190,18 +2214,18 @@ Reviews are a dedicated asset type inside each product. They are collected, appr
 | Type | Description |
 |---|---|
 | Text review | Written quote from a customer — typed or copy-pasted |
-| Screenshot | Photo of WhatsApp chat, Facebook comment, Messenger, email, or any other source |
+| Screenshot | Photo of Telegram chat, Facebook comment, Messenger, email, or any other source |
 | Video testimonial | Short video of a customer talking about the product |
 
 **Adding a review:**
 
 Web app:
 - Open any product → Reviews tab → Add Review
-- Fill in: quote text / upload screenshot or video, reviewer name or alias (optional), star rating (optional), source (WhatsApp / Facebook / Messenger / Email / Other)
+- Fill in: quote text / upload screenshot or video, reviewer name or alias (optional), star rating (optional), source (Telegram / Facebook / Messenger / Email / Other)
 - Privacy setting: show name / hide name / use alias
 - Save → status is Pending Approval by default
 
-WhatsApp:
+Telegram:
 - Forward a screenshot of the review and say which product it belongs to
 - Or type the review text and say which product it is for
 - System saves it and asks: "Use reviewer's name or keep anonymous?"
@@ -2296,11 +2320,11 @@ Competitors spend real money on ads only when something is working. A competitor
 - Facebook Groups: Puppeteer (no API for group content)
 - Google Ads: Google Ads Transparency Center (public)
 - Runs on schedule (every 6 hours for organic, daily for ads)
-- Changes detected → alert sent via WhatsApp
+- Changes detected → alert sent via Telegram
 
 #### Alerts & Reports
-- Instant WhatsApp alert when competitor posts something viral
-- Instant WhatsApp alert when competitor launches a new ad campaign
+- Instant Telegram alert when competitor posts something viral
+- Instant Telegram alert when competitor launches a new ad campaign
 - Daily digest: summary of all competitor organic activity
 - Weekly ad intelligence report: all active competitor ads, what is working, how long running
 - Weekly analysis: trends, patterns, what is working for competitors both organically and in ads
@@ -2322,7 +2346,7 @@ Competitors spend real money on ads only when something is working. A competitor
 - Seasonal or event-driven opportunities
 
 #### Output
-- WhatsApp: "3 new trending products found this week — check the app"
+- Telegram: "3 new trending products found this week — check the app"
 - Web app: full product suggestions with images, trend data, source links
 - Option to save suggestion to a shortlist for later action
 
@@ -2365,9 +2389,9 @@ All suggestions are recommendations. Nothing changes automatically.
 
 #### Reporting
 
-- **Weekly WhatsApp summary** — short digest per business: top performing post, follower change, consistency score, one key suggestion
+- **Weekly Telegram summary** — short digest per business: top performing post, follower change, consistency score, one key suggestion
 - **Monthly web app report** — full breakdown per platform: performance charts, best/worst content, audience growth, actionable recommendations
-- **Ask anything via WhatsApp** — conversational access to your data at any time:
+- **Ask anything via Telegram** — conversational access to your data at any time:
   - "How is my Facebook page doing?"
   - "What was my best post last month?"
   - "Which product is getting the most engagement?"
@@ -2381,7 +2405,7 @@ All suggestions are recommendations. Nothing changes automatically.
 
 ---
 
-### WhatsApp Interaction
+### Telegram Interaction
 
 All via natural language:
 - "Add this Facebook page as a competitor" (paste URL)
@@ -2408,7 +2432,7 @@ All via natural language:
 ### Goal
 Automatically research, produce, and publish original short-form video content for multiple interest-based channels across YouTube, Facebook, TikTok, and Instagram. Style: Zack D Films — short, animated, fact-based, fast-paced videos. Niches: science, math, tech, programming, and others.
 
-AI does all the heavy work at every step. You stay involved through WhatsApp at each stage — giving quick feedback, approvals, or small directions. Minimal action from you, maximum awareness. Nothing moves to the next step without your signal.
+AI does all the heavy work at every step. You stay involved through Telegram at each stage — giving quick feedback, approvals, or small directions. Minimal action from you, maximum awareness. Nothing moves to the next step without your signal.
 
 ---
 
@@ -2607,54 +2631,54 @@ All research findings are stored as a style guide per channel. Every video produ
 
 ### Progressive Production Pipeline
 
-AI works step by step. After each step it reports to you on WhatsApp with a short summary and asks for your signal before continuing. You respond with: ok / change this / try again / skip.
+AI works step by step. After each step it reports to you on Telegram with a short summary and asks for your signal before continuing. You respond with: ok / change this / try again / skip.
 
 ```
 Step 1 — Idea Pool
 AI surfaces new ideas from your inputs + its own discovery.
-WhatsApp: "5 new ideas for Science channel. Top pick: [idea]. See full list in app."
+Telegram: "5 new ideas for Science channel. Top pick: [idea]. See full list in app."
 You pick one or give a direction.
 
 Step 2 — Research
 AI runs viral research on the most relevant reference videos for the chosen idea.
 Frame-by-frame only if you approved it.
-WhatsApp: "Research done. Key findings ready in app. Proceed to script?"
+Telegram: "Research done. Key findings ready in app. Proceed to script?"
 You: ok / review findings first.
 
 Step 3 — Script
 Claude writes the script using the research findings — hook, story beats, ending.
-WhatsApp: "Script ready. Review in app."
+Telegram: "Script ready. Review in app."
 You read, leave comments or edits, then approve.
 
 Step 4 — Visual Plan
 AI plans each scene — what visuals, text on screen, timing.
-WhatsApp: "Visual plan ready. Check in app."
+Telegram: "Visual plan ready. Check in app."
 You approve or request changes.
 
 Step 5 — Image and Visual Generation
 AI generates all images and graphics for each scene.
-WhatsApp: "Visuals generated. Preview in app."
+Telegram: "Visuals generated. Preview in app."
 You approve or request specific changes.
 
 Step 6 — Voiceover
 AI generates voiceover from the approved script using text-to-speech.
-WhatsApp: "Voiceover ready. Listen in app."
+Telegram: "Voiceover ready. Listen in app."
 You approve or ask for a different tone/speed.
 
 Step 7 — Video Assembly
 AI combines visuals + voiceover + background music into a finished video.
-WhatsApp: "Video assembled. Final preview in app."
+Telegram: "Video assembled. Final preview in app."
 You watch it and give final approval.
 
 Step 8 — Post
 AI posts to all configured platforms for that channel with auto-generated
 title, description, hashtags, and tags.
-WhatsApp: "Posted ✓ — Science channel, YouTube + TikTok + Facebook."
+Telegram: "Posted ✓ — Science channel, YouTube + TikTok + Facebook."
 ```
 
 ---
 
-### WhatsApp Interaction Style
+### Telegram Interaction Style
 - Every update is short — one or two lines with a link to the app for details
 - You never need to remember what step you are on — AI always states it
 - You can pause any pipeline at any step and resume later
@@ -2678,14 +2702,14 @@ WhatsApp: "Posted ✓ — Science channel, YouTube + TikTok + Facebook."
 ### Feature 1 — Reminder System
 
 ### Core Features
-- Set reminders via WhatsApp or web app
-- Delivered via WhatsApp + visible in web app dashboard
+- Set reminders via Telegram or web app
+- Delivered via Telegram + visible in web app dashboard
 - Recurring reminders: daily, weekly, monthly, custom interval
 - Priority levels: low, normal, urgent
 - Smart follow-up: after delivering reminder, asks once or twice if it was acted on
 - Snooze: "remind me again in 30 min / 1 hour / tomorrow"
 
-### WhatsApp Flow
+### Telegram Flow
 1. "Remind me to call Ahmed tomorrow at 6pm"
 2. System confirms: "Reminder set ✓ — Call Ahmed, tomorrow 6pm"
 3. At 6pm: "📌 Reminder: Call Ahmed — Done? Reply: done / snooze / skip"
@@ -2704,10 +2728,10 @@ WhatsApp: "Posted ✓ — Science channel, YouTube + TikTok + Facebook."
 ### Core Features
 - **Two-way sync with Google Calendar**
 - View, add, edit events from web app
-- Morning briefing: WhatsApp message with today's events (sent at configurable time)
-- On-demand schedule via WhatsApp
+- Morning briefing: Telegram message with today's events (sent at configurable time)
+- On-demand schedule via Telegram
 
-### WhatsApp Interaction
+### Telegram Interaction
 
 All via natural language:
 - "What do I have today?"
@@ -2725,12 +2749,12 @@ All via natural language:
 Supports multiple languages. Each language is configured independently with its own lessons, notes, and research queue. Currently active: English, Arabic. More languages can be added at any time.
 
 ### Core Features
-- Daily lessons delivered via WhatsApp (configurable time, default 8am)
+- Daily lessons delivered via Telegram (configurable time, default 8am)
 - Lesson types rotate: vocabulary, grammar, idioms, phrasal verbs, pronunciation tips
 - Lesson schedule and topics configurable from web UI
 
 ### Notes System
-- Take notes via WhatsApp (natural language: "save this note: ..." or just send the note and say where it belongs)
+- Take notes via Telegram (natural language: "save this note: ..." or just send the note and say where it belongs)
 - Notes saved under topics (auto-tagged or manually tagged)
 - Mark notes as "research later" or "practice later"
 - System sends periodic reminders for flagged notes
@@ -2748,7 +2772,7 @@ Supports multiple languages. Each language is configured independently with its 
 
 ### Concept
 A personalized intelligence feed — not just news, but curated, real, verified
-information across the user's interests. Delivered twice daily via WhatsApp.
+information across the user's interests. Delivered twice daily via Telegram.
 Designed to fuel personal brand growth, content ideas, and deep knowledge.
 
 ### Interest Areas (Niches)
@@ -2765,7 +2789,7 @@ Designed to fuel personal brand growth, content ideas, and deep knowledge.
 - **Morning briefing** (configurable, default 8am): What's happening today / overnight
 - **Evening briefing** (configurable, default 8pm): Day's top developments + content ideas
 
-### Briefing Format (WhatsApp)
+### Briefing Format (Telegram)
 Each briefing includes:
 - Top 2-3 items per active niche (concise bullet points)
 - Source name mentioned for credibility
@@ -2824,9 +2848,9 @@ Stage 1 — AI scans all sources daily
     → Each shown with: score, landed cost, local competition, BD fit
       → You mark each: Interested / Not Interested / Watch Later
 
-Stage 2 — You trigger supplier research when ready (WhatsApp or web app)
+Stage 2 — You trigger supplier research when ready (Telegram or web app)
   → System finds and compares top 5 suppliers
-    → WhatsApp: short summary (name, price, MOQ, rating, factory/trader)
+    → Telegram: short summary (name, price, MOQ, rating, factory/trader)
     → Web app: full comparison table
       → You shortlist one or two suppliers
 
@@ -2951,7 +2975,7 @@ You always know why your list is empty rather than wondering.
 
 **How You Change Settings:**
 
-From WhatsApp naturally — no strict syntax:
+From Telegram naturally — no strict syntax:
 ```
 "pause clothing for now"
 "change electronics max price to 5000 taka"
@@ -2968,7 +2992,7 @@ System confirms before saving any change and shows what will be affected.
 
 #### Keyword Foundation — Generated Per Category Profile
 
-Pure keyword searching is not enough. The system needs both product language and human problem language. When a new category is created the system has a short guided conversation first — either WhatsApp or web app — before generating anything:
+Pure keyword searching is not enough. The system needs both product language and human problem language. When a new category is created the system has a short guided conversation first — either Telegram or web app — before generating anything:
 
 ```
 System: "You added Women's Clothing. A few quick questions:"
@@ -3093,7 +3117,7 @@ Business and market news:
 **What happens with flagged articles:**
 Each flagged article gets a category tag (which of your product categories it relates to), a signal type (seasonal, policy, economic, cultural), and an urgency level (time-sensitive like weather vs slower-moving like policy).
 
-Time-sensitive signals — weather, Eid confirmed, port delays — get an immediate WhatsApp alert to you rather than waiting for the daily summary.
+Time-sensitive signals — weather, Eid confirmed, port delays — get an immediate Telegram alert to you rather than waiting for the daily summary.
 
 Slower signals feed into the daily analysis and add weight when the same theme appears in other sources.
 
@@ -3444,19 +3468,19 @@ When the same variant has 38 sellers across all three platforms with 47,000 comb
 
 **Setup (one time):** Open the web app, select your product categories, set your budget range and target profit margin. Done. System starts working automatically from that point.
 
-**Every morning:** You get a WhatsApp message — "12 new product opportunities found today. Top pick: [Product Name] — 42% margin, only 4 sellers on Daraz, trending on TikTok BD. Check the app."
+**Every morning:** You get a Telegram message — "12 new product opportunities found today. Top pick: [Product Name] — 42% margin, only 4 sellers on Daraz, trending on TikTok BD. Check the app."
 
 **Your daily review (5–10 minutes):** Open the web app, see a clean list of 10–15 products. Each shows: photo, China price → landed cost in BDT → suggested sell price → margin, score, Daraz competition, and why it was flagged. You mark each one: **Interested / Not Interested / Watch Later**. 5–10 seconds per product.
 
-**When you mark Interested:** System runs a full deep investigation — review intelligence, Bangladesh market sizing, local competition deep dive, profit scenario modelling, risk assessment, demand validation suggestion, and content strategy. You come back to a complete report. Supplier research does not start automatically — you trigger it separately when you are ready (from WhatsApp or web app).
+**When you mark Interested:** System runs a full deep investigation — review intelligence, Bangladesh market sizing, local competition deep dive, profit scenario modelling, risk assessment, demand validation suggestion, and content strategy. You come back to a complete report. Supplier research does not start automatically — you trigger it separately when you are ready (from Telegram or web app).
 
-**When you trigger supplier research:** System finds top 5 suppliers. WhatsApp gets a short summary. Web app shows full comparison table. You shortlist. Nothing sent yet.
+**When you trigger supplier research:** System finds top 5 suppliers. Telegram gets a short summary. Web app shows full comparison table. You shortlist. Nothing sent yet.
 
 **When you are ready to inquire:** Web app only. Open supplier profile, read AI-drafted message, edit freely, save draft. Send only when you explicitly press Send yourself.
 
-**Ongoing monitoring:** For every product you saved, system watches the price. Drop of 10%+ = WhatsApp alert. Supplier adds new products = WhatsApp alert. Product you watched suddenly surges on Daraz = WhatsApp alert.
+**Ongoing monitoring:** For every product you saved, system watches the price. Drop of 10%+ = Telegram alert. Supplier adds new products = Telegram alert. Product you watched suddenly surges on Daraz = Telegram alert.
 
-**Seasonal planning:** 6–8 weeks before Eid, winter, Pohela Boishakh, or any major season — system sends you a WhatsApp heads-up with relevant product opportunities so you have time to order and receive before the peak.
+**Seasonal planning:** 6–8 weeks before Eid, winter, Pohela Boishakh, or any major season — system sends you a Telegram heads-up with relevant product opportunities so you have time to order and receive before the peak.
 
 **Weekly report:** Every Sunday morning — summary of the week, rising categories, your shortlisted products, price changes, and what seasons are coming up in the next few weeks.
 
@@ -3575,10 +3599,10 @@ Before recommending any product, system checks Daraz Bangladesh:
 Product marked Interested → deep investigation runs → supplier search does NOT start automatically. You decide when to move to Stage 2.
 
 **Stage 2 — Supplier Research (you trigger)**
-Triggered from WhatsApp or web app when you are ready.
+Triggered from Telegram or web app when you are ready.
 - System searches Alibaba + 1688 for top 5 suppliers of that specific variant
 - Compares: price, MOQ, ratings, response rate, years on platform, factory vs trading company
-- WhatsApp: short summary of top 3-5 suppliers
+- Telegram: short summary of top 3-5 suppliers
 - Web app: full side-by-side comparison table
 - You shortlist one or two suppliers. Nothing sent yet.
 
@@ -3592,7 +3616,7 @@ Triggered from WhatsApp or web app when you are ready.
 
 **Ongoing supplier monitoring**
 - Saved suppliers watched for price changes and new product additions
-- WhatsApp alert when something changes on a saved supplier
+- Telegram alert when something changes on a saved supplier
 
 ---
 
@@ -3604,7 +3628,7 @@ Triggered from WhatsApp or web app when you are ready.
 
 ---
 
-### WhatsApp Interaction
+### Telegram Interaction
 
 All via natural language:
 - "What products are trending for Bangladesh this week?"
@@ -3630,7 +3654,7 @@ All via natural language:
 | Service | Used For | Provider | Status |
 |---|---|---|---|
 | Claude API | AI brain (all modules) | Anthropic | ✅ Have key |
-| OpenClaw | WhatsApp integration | openclaw.ai | ❌ Setup needed |
+| OpenClaw | Telegram integration | openclaw.ai | ❌ Setup needed |
 | Facebook Graph API | FB Pages + Groups + Instagram posting | Meta | ❌ Setup needed |
 | Meta Ad Library API | Competitor ad monitoring (free, public) | Meta | ❌ Setup needed |
 | TikTok Ads Library | Competitor TikTok ad monitoring (free, public) | TikTok | ✅ No setup needed |
@@ -3662,9 +3686,9 @@ All via natural language:
 - [ ] Phase 1 — Core Infrastructure
   - Docker setup (OpenClaw + Next.js app containers)
   - OpenClaw configured with Claude API key
-  - WhatsApp connected (QR scan)
+  - Telegram bot created and connected (BotFather token)
   - Next.js app skeleton with all application routes
-  - Basic WhatsApp ↔ Claude conversation working
+  - Basic Telegram ↔ Claude conversation working
 
 - [ ] Phase 2 — Application 1: Social Media Manager
   - Feature 1 — Social Media Posting & Scheduling
@@ -3674,7 +3698,7 @@ All via natural language:
     - Asset management (upload, review, approval flow)
     - Client reviews management
     - Image generation via Pippit.ai + brand identity
-    - Post creation flow (web app + WhatsApp)
+    - Post creation flow (web app + Telegram)
     - Entity-based scheduling + condition-based slots
     - Content recycling system
     - Special days calendar + festival profiles
@@ -3697,19 +3721,19 @@ All via natural language:
   - Visual plan + image generation
   - Voiceover generation (text-to-speech)
   - Video assembly (visuals + voiceover + music)
-  - WhatsApp step-by-step progress flow
+  - Telegram step-by-step progress flow
   - Multi-platform posting
   - Web UI production workspace + content calendar
 
 - [ ] Phase 4 — Application 3: Reminder & Calendar
   - Feature 1 — Reminder System
-    - WhatsApp reminder flow
+    - Telegram reminder flow
     - Recurring reminders
     - Web UI
   - Feature 2 — Calendar Manager
     - Google Calendar two-way sync
     - Morning briefing
-    - WhatsApp commands
+    - Telegram commands
 
 - [ ] Phase 5 — Application 4: Language Learning
   - Multi-language support framework
